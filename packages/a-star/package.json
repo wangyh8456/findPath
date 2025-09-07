@@ -1,0 +1,30 @@
+{
+    "name": "a-star",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "node tests",
+        "asbuild:debug": "asc assembly/index.ts --target debug",
+        "asbuild:release": "asc assembly/index.ts --target release",
+        "asbuild": "npm run asbuild:debug && npm run asbuild:release",
+        "start": "npx serve .",
+        "format": "prettier --write .",
+        "format:check": "prettier --check ."
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "packageManager": "pnpm@10.15.1",
+    "devDependencies": {
+        "assemblyscript": "^0.28.6",
+        "tsup": "^8.5.0"
+    },
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": "./build/release.js",
+            "types": "./build/release.d.ts"
+        }
+    }
+}

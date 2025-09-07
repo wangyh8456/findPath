@@ -1,0 +1,112 @@
+.grid-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.grid {
+    display: grid;
+    gap: 1px;
+    border: 2px solid #333;
+    background-color: #333;
+}
+
+.grid-cell {
+    width: 100%;
+    height: 100%;
+    min-width: 20px;
+    min-height: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    outline: none;
+}
+
+.grid-cell:hover {
+    opacity: 0.8;
+    transform: scale(0.95);
+}
+
+/* 空白单元格 */
+.grid-cell--empty {
+    background-color: #ffffff;
+}
+
+.grid-cell--empty:hover {
+    background-color: #f0f0f0;
+}
+
+/* 起点单元格 */
+.grid-cell--start {
+    background-color: #4caf50;
+    position: relative;
+}
+
+.grid-cell--start::after {
+    content: 'S';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+/* 终点单元格 */
+.grid-cell--end {
+    background-color: #f44336;
+    position: relative;
+}
+
+.grid-cell--end::after {
+    content: 'E';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+/* 障碍物单元格 */
+.grid-cell--obstacle {
+    background-color: #333333;
+}
+
+/* 路径单元格 */
+.grid-cell--path {
+    background-color: #2196f3;
+    animation: pathReveal 0.3s ease-in-out;
+}
+
+@keyframes pathReveal {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .grid {
+        max-width: 400px;
+        max-height: 400px;
+    }
+
+    .grid-cell {
+        min-width: 15px;
+        min-height: 15px;
+    }
+
+    .grid-cell--start::after,
+    .grid-cell--end::after {
+        font-size: 10px;
+    }
+}

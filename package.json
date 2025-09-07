@@ -1,0 +1,27 @@
+{
+    "name": "pathfinding",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "private": true,
+    "workspaces": [
+        "packages/*",
+        "apps/*"
+    ],
+    "scripts": {
+        "build:lib": "pnpm --filter as-a-star build",
+        "dev:demo": "pnpm --filter demo dev",
+        "build:demo": "pnpm --filter demo build",
+        "format": "prettier --write .",
+        "format:check": "prettier --check .",
+        "format:packages": "pnpm -r format",
+        "format:check:packages": "pnpm -r format:check"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "packageManager": "pnpm@10.15.1",
+    "devDependencies": {
+        "prettier": "^3.6.2"
+    }
+}
