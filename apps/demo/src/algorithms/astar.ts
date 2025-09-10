@@ -44,6 +44,11 @@ export interface AStarResult {
     executionTime: number;
 }
 
+export interface AStarResultWasm {
+    path: Array<string>|null;
+    time: number;
+}
+
 /**
  * JavaScript实现的A*寻路算法
  * @param grid 网格数组，true表示障碍物，false表示可通行

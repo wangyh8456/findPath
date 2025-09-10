@@ -2,8 +2,13 @@
 <html lang="en">
     <head>
         <script type="module">
-            import { add } from './build/release.js';
-            document.body.innerText = add(1, 2);
+            import { findPathAstar,memory} from './build/release.js';
+            const grid=new Array(9).fill(0).map((item)=>{
+                return new Int8Array(9).fill(false);
+            });
+            console.log(grid);
+            let res=findPathAstar(grid,0,0,2,1 );
+            console.log(res);
         </script>
     </head>
     <body></body>

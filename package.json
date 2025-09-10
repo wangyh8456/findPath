@@ -9,6 +9,7 @@
         "apps/*"
     ],
     "scripts": {
+        "install:packages": "pnpm -r install",
         "build:lib": "pnpm --filter as-a-star build",
         "dev:demo": "pnpm --filter demo dev",
         "build:demo": "pnpm --filter demo build",

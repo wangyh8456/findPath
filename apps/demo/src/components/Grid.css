@@ -1,7 +1,6 @@
 .grid-container {
     display: flex;
-    justify-content: center;
-    align-items: center;
+    overflow-x: auto;
     padding: 20px;
 }
 
@@ -10,6 +9,7 @@
     gap: 1px;
     border: 2px solid #333;
     background-color: #333;
+    margin: 0 auto;
 }
 
 .grid-cell {

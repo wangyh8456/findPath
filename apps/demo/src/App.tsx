@@ -4,7 +4,8 @@ import type { Cell } from './components/Grid';
 import { CellType } from './components/Grid';
 import ControlPanel from './components/ControlPanel';
 import { findPathAStar } from './algorithms/astar';
-import type { AStarResult } from './algorithms/astar';
+import { findPathAstar as  findPathAstarWasm} from 'a-star';
+import type { AStarResult, AStarResultWasm } from './algorithms/astar';
 import './App.css';
 
 // 网格交互模式
@@ -125,9 +126,22 @@ function App() {
      * 将网格转换为算法所需的布尔数组
      */
     const gridToBooleanArray = useCallback((): boolean[][] => {
-        return grid.map(row =>
-            row.map(cell => cell.type === CellType.OBSTACLE)
-        );
+        // return grid.map(row =>
+        //     row.map(cell => cell.type === CellType.OBSTACLE)
+        // );
+        const width = grid[0].length;
+        const height = grid.length;
+        const boolGrid: boolean[][] = new Array(height).fill(0).map(() => {
+            return new Array(width).fill(false);
+        });
+        for (let i = 0; i < height; i++) {
+            for (let j = 0; j < width; j++) {
+                if (grid[i][j].type === CellType.OBSTACLE) {
+                    boolGrid[i][j] = true;
+                }
+            }
+        }
+        return boolGrid;
     }, [grid]);
 
     /**
@@ -179,6 +193,7 @@ function App() {
             setJsTime(result.executionTime);
 
             if (result.found && result.path.length > 0) {
+                console.log(result.path)
                 displayPath(result.path);
             } else {
                 alert('未找到路径！');
@@ -202,20 +217,29 @@ function App() {
         try {
             // TODO: 这里将来会替换为真正的AssemblyScript实现
             const boolGrid = gridToBooleanArray();
-            const result: AStarResult = findPathAStar(
+            const result: Array<string> = findPathAstarWasm(
                 boolGrid,
                 startPoint.x,
                 startPoint.y,
                 endPoint.x,
                 endPoint.y
             );
-
             // 模拟AssemblyScript的性能优势
-            const simulatedTime = result.executionTime * 0.7;
-            setWasmTime(simulatedTime);
+            // const simulatedTime = result.executionTime * 0.7;
 
-            if (result.found && result.path.length > 0) {
-                displayPath(result.path);
+            const finalRes=result;
+            if (finalRes) {
+                const time=result.pop() as string;
+                setWasmTime(parseFloat(time));
+                const finalPath: { x: number; y: number }[] = result.map(item=>{
+                    const arr=item.split('-')
+                    return {
+                        x:parseInt(arr[0]),
+                        y:parseInt(arr[1])
+                    }
+                })
+                console.log(finalPath)
+                displayPath(finalPath);
             } else {
                 alert('未找到路径！');
             }

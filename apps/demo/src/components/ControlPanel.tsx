@@ -1,6 +1,8 @@
 import React from 'react';
 import './ControlPanel.css';
 
+const MAX_SIZE = 1000;
+
 // 控制面板属性接口
 interface ControlPanelProps {
     width: number;
@@ -35,7 +37,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
      * 处理宽度输入变化
      */
     const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newWidth = Math.max(5, Math.min(50, parseInt(e.target.value) || 10));
+        const newWidth = Math.max(5, Math.min(MAX_SIZE, parseInt(e.target.value) || 10));
         onWidthChange(newWidth);
     };
 
@@ -43,7 +45,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
      * 处理高度输入变化
      */
     const handleHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newHeight = Math.max(5, Math.min(50, parseInt(e.target.value) || 10));
+        const newHeight = Math.max(5, Math.min(MAX_SIZE, parseInt(e.target.value) || 10));
         onHeightChange(newHeight);
     };
 
@@ -61,22 +63,22 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 <h3>网格设置</h3>
                 <div className="input-group">
                     <label>
-                        宽度 (5-50):
+                        宽度 (5-{MAX_SIZE}):
                         <input
                             type="number"
                             min="5"
-                            max="50"
+                            max={MAX_SIZE}
                             value={width}
                             onChange={handleWidthChange}
                             disabled={isRunning}
                         />
                     </label>
                     <label>
-                        高度 (5-50):
+                        高度 (5-{MAX_SIZE}):
                         <input
                             type="number"
                             min="5"
-                            max="50"
+                            max={MAX_SIZE}
                             value={height}
                             onChange={handleHeightChange}
                             disabled={isRunning}
