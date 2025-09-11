@@ -1,12 +1,14 @@
 import React from 'react';
 import './ControlPanel.css';
 
-const MAX_SIZE = 1000;
+const MAX_SIZE = 100;
 
 // 控制面板属性接口
 interface ControlPanelProps {
     width: number;
     height: number;
+    obstacleProbability: number;
+    onObstacleProbabilityChange: (probability: number) => void;
     onWidthChange: (width: number) => void;
     onHeightChange: (height: number) => void;
     onClearGrid: () => void;
@@ -24,6 +26,8 @@ interface ControlPanelProps {
 const ControlPanel: React.FC<ControlPanelProps> = ({
     width,
     height,
+    obstacleProbability,
+    onObstacleProbabilityChange,
     onWidthChange,
     onHeightChange,
     onClearGrid,
@@ -92,6 +96,23 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 >
                     清空网格
                 </button>
+            </div>
+            <div className="control-section">
+                <h3>初始障碍物密度</h3>
+                <div className="input-group">
+                    <label>
+                        障碍物密度 (0-1):
+                        <input
+                            type="number"
+                            min="0"
+                            max="1"
+                            step="0.01"
+                            value={obstacleProbability}
+                            onChange={(e) => onObstacleProbabilityChange(parseFloat(e.target.value))}
+                            disabled={isRunning}
+                        />
+                    </label>
+                </div>
             </div>
 
             <div className="control-section">

@@ -20,7 +20,7 @@ class AStarNode {
      * 计算启发式距离（曼哈顿距离）
      */
     calculateH(endX: number, endY: number): void {
-        this.h = Math.abs(this.x - endX) + Math.abs(this.y - endY);
+        this.h = Math.pow(this.x - endX, 2) + Math.pow(this.y - endY, 2);
     }
 
     /**

@@ -22,6 +22,7 @@ function App() {
     const [width, setWidth] = useState(20);
     const [height, setHeight] = useState(20);
     const [grid, setGrid] = useState<Cell[][]>([]);
+    const [obstacleProbability, setObstacleProbability] = useState(0.25);
     const [startPoint, setStartPoint] = useState<{
         x: number;
         y: number;
@@ -44,7 +45,12 @@ function App() {
         for (let y = 0; y < height; y++) {
             const row: Cell[] = [];
             for (let x = 0; x < width; x++) {
-                row.push({ x, y, type: CellType.EMPTY });
+                const random = Math.random();
+                if (random < obstacleProbability) {
+                    row.push({ x, y, type: CellType.OBSTACLE });
+                } else {
+                    row.push({ x, y, type: CellType.EMPTY });
+                }
             }
             newGrid.push(row);
         }
@@ -254,7 +260,7 @@ function App() {
     // 初始化网格
     useEffect(() => {
         initializeGrid();
-    }, [initializeGrid]);
+    }, [initializeGrid,obstacleProbability]);
 
     return (
         <div className='app'>
@@ -274,6 +280,8 @@ function App() {
                 <ControlPanel
                     width={width}
                     height={height}
+                    obstacleProbability={obstacleProbability}
+                    onObstacleProbabilityChange={setObstacleProbability}
                     onWidthChange={setWidth}
                     onHeightChange={setHeight}
                     onClearGrid={handleClearGrid}

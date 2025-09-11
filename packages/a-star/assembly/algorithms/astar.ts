@@ -16,7 +16,7 @@ class AStarNode {
     }
 
     calculateH(endX: i32, endY: i32): void {
-        this.h = <f64>(Math.abs(this.x - endX) + Math.abs(this.y - endY));
+        this.h = <f64>(Math.pow(this.x - endX, 2) + Math.pow(this.y - endY, 2));
     }
 
     updateF(): void {
@@ -108,14 +108,14 @@ export function findPathAstar(
     }
 
     const openList: AStarNode[] = [];
-    const nodeMap: Array<AStarNode> = [];
-    const closedList: Array<i32> = [];
+    const nodeMap = new Map<String,AStarNode>();
+    const closedList=new Set<String>();
 
     const startNode: AStarNode = new AStarNode(startX, startY);
     startNode.calculateH(endX, endY);
     startNode.updateF();
     openList.push(startNode);
-    nodeMap.push(startNode);
+    nodeMap.set(`${startX},${startY}`,startNode);
 
     while (openList.length > 0) {
         let currentIndex: i32 = 0;
@@ -130,7 +130,7 @@ export function findPathAstar(
         }
 
         openList.splice(currentIndex, 1);
-        closedList.push(currentNode.x * width + currentNode.y);  // 存储节点位置避免重复
+        closedList.add(`${currentNode.x},${currentNode.y}`);  // 存储节点位置避免重复
 
         // 到达目标点
         if (currentNode.x === endX && currentNode.y === endY) {
@@ -165,10 +165,10 @@ export function findPathAstar(
 
             const newX: i32 = currentNode.x + dx;
             const newY: i32 = currentNode.y + dy;
-            const newKey: i32 = newX * width + newY;
+            const newKey: String = `${newX},${newY}`;
 
             // 如果超出边界或是障碍物或在closedList中，则跳过
-            if (newX < 0 || newX >= width || newY < 0 || newY >= height || grid[newY][newX] || closedList.indexOf(newKey) !== -1) {
+            if (newX < 0 || newX >= width || newY < 0 || newY >= height || grid[newY][newX] || closedList.has(newKey)) {
                 continue;
             }
 
@@ -179,16 +179,12 @@ export function findPathAstar(
 
             // let neighborNodeIndex: i32 = nodeMap.findIndex(node => node.x === newX && node.y === newY);
             let neighborNode: AStarNode|null = null;
-            for(let i: i32 = 0; i < nodeMap.length; i++) {
-                if (nodeMap[i].x === newX && nodeMap[i].y === newY) {
-                    neighborNode = nodeMap[i];
-                    break;
-                }
-            }
-            if (!neighborNode) {
+            if (nodeMap.has(newKey)) {
+                neighborNode = nodeMap.get(newKey);
+            } else {
                 neighborNode = new AStarNode(newX, newY);
                 neighborNode.calculateH(endX, endY);
-                nodeMap.push(neighborNode);
+                nodeMap.set(newKey,neighborNode);
                 openList.push(neighborNode);
             }
 
