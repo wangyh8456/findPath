@@ -1,42 +1,15 @@
-// A*算法的节点类
-class AStarNode {
+// Dijkstra算法的节点类
+class DijkstraNode {
     x: number;
     y: number;
-    g: number; // 从起点到当前节点的实际距离
-    h: number; // 从当前节点到终点的启发式距离
-    f: number; // f = g + h
-    parent: AStarNode | null;
+    f: number; // 从起点到当前节点的最短距离
+    parent: DijkstraNode | null;
 
     constructor(x: number, y: number) {
         this.x = x;
         this.y = y;
-        this.g = 0;
-        this.h = 0;
-        this.f = 0;
+        this.f = Infinity;
         this.parent = null;
-    }
-
-    /**
-     * 计算启发式距离（欧几里得距离）
-     */
-    calculateH(endX: number, endY: number): void {
-        //欧几里得距离
-        // this.h = Math.sqrt(
-        //     Math.pow(this.x - endX, 2) + Math.pow(this.y - endY, 2)
-        // );
-
-        //曼哈顿距离
-        // this.h = Math.abs(this.x - endX) + Math.abs(this.y - endY);
-
-        //切比雪夫距离
-        this.h = Math.max(Math.abs(this.x - endX), Math.abs(this.y - endY));
-    }
-
-    /**
-     * 更新F值
-     */
-    updateF(): void {
-        this.f = this.g + this.h;
     }
 }
 
@@ -46,35 +19,33 @@ export interface PathPoint {
     y: number;
 }
 
-// A*算法结果接口
-export interface AStarResult {
+// Dijkstra算法结果接口
+export interface DijkstraResult {
     path: PathPoint[];
     found: boolean;
     executionTime: number;
 }
 
 /**
- * JavaScript实现的A*寻路算法
+ * JavaScript实现的Dijkstra寻路算法
  * @param grid 网格数组，true表示障碍物，false表示可通行
  * @param startX 起点X坐标
  * @param startY 起点Y坐标
  * @param endX 终点X坐标
  * @param endY 终点Y坐标
- * @returns A*算法结果
+ * @returns Dijkstra算法结果
  */
-export function findPathAStar(
+export function findPathDijkstra(
     grid: boolean[][],
     startX: number,
     startY: number,
     endX: number,
     endY: number
-): AStarResult {
+): DijkstraResult {
     const startTime = performance.now();
-
     const width = grid[0].length;
     const height = grid.length;
 
-    // 验证起点和终点是否有效
     if (
         startX < 0 ||
         startX >= width ||
@@ -93,8 +64,6 @@ export function findPathAStar(
             executionTime: performance.now() - startTime,
         };
     }
-
-    // 如果起点就是终点
     if (startX === endX && startY === endY) {
         return {
             path: [{ x: startX, y: startY }],
@@ -103,19 +72,15 @@ export function findPathAStar(
         };
     }
 
-    const openList: AStarNode[] = [];
+    const openList: DijkstraNode[] = [];
     const closedList: Set<string> = new Set();
-    const nodeMap: Map<string, AStarNode> = new Map();
+    const nodeMap: Map<string, DijkstraNode> = new Map();
 
-    // 创建起始节点
-    const startNode = new AStarNode(startX, startY);
-    startNode.calculateH(endX, endY);
-    startNode.updateF();
-
+    const startNode = new DijkstraNode(startX, startY);
+    startNode.f = 0;
     openList.push(startNode);
     nodeMap.set(`${startX},${startY}`, startNode);
 
-    // 8个方向的移动（包括对角线）
     const directions = [
         { dx: -1, dy: -1, cost: Math.SQRT2 }, // 左上
         { dx: 0, dy: -1, cost: 1 }, // 上
@@ -148,28 +113,24 @@ export function findPathAStar(
     };
 
     while (openList.length > 0) {
-        // 找到F值最小的节点
-        let currentIndex = 0;
+        let currentNodeIndex = 0;
+        let currentNode = openList[currentNodeIndex];
         for (let i = 1; i < openList.length; i++) {
-            if (openList[i].f < openList[currentIndex].f) {
-                currentIndex = i;
+            if (openList[i].f < currentNode.f) {
+                currentNodeIndex = i;
+                currentNode = openList[currentNodeIndex];
             }
         }
+        openList.splice(currentNodeIndex, 1);
+        closedList.add(`${currentNode.x},${currentNode.y}`);
 
-        const currentNode = openList.splice(currentIndex, 1)[0];
-        const currentKey = `${currentNode.x},${currentNode.y}`;
-        closedList.add(currentKey);
-
-        // 检查是否到达终点
         if (currentNode.x === endX && currentNode.y === endY) {
             const path: PathPoint[] = [];
-            let node: AStarNode | null = currentNode;
-
-            while (node !== null) {
-                path.unshift({ x: node.x, y: node.y });
-                node = node.parent;
+            let current: DijkstraNode | null = currentNode;
+            while (current) {
+                path.unshift({ x: current.x, y: current.y });
+                current = current.parent;
             }
-
             return {
                 path,
                 found: true,
@@ -177,13 +138,10 @@ export function findPathAStar(
             };
         }
 
-        // 检查所有邻居节点
         for (const direction of directions) {
             const newX = currentNode.x + direction.dx;
             const newY = currentNode.y + direction.dy;
             const newKey = `${newX},${newY}`;
-
-            // 检查边界和障碍物
             if (
                 newX < 0 ||
                 newX >= width ||
@@ -194,8 +152,6 @@ export function findPathAStar(
             ) {
                 continue;
             }
-
-            // 检查对角线移动是否被阻挡
             if (
                 isDiagonalBlocked(
                     currentNode.x,
@@ -206,27 +162,19 @@ export function findPathAStar(
             ) {
                 continue;
             }
-
-            const tentativeG = currentNode.g + direction.cost;
-
             let neighborNode = nodeMap.get(newKey);
             if (!neighborNode) {
-                neighborNode = new AStarNode(newX, newY);
-                neighborNode.calculateH(endX, endY);
+                neighborNode = new DijkstraNode(newX, newY);
                 nodeMap.set(newKey, neighborNode);
                 openList.push(neighborNode);
             }
-
-            // 如果找到了更好的路径
-            if (tentativeG < neighborNode.g || neighborNode.g === 0) {
+            const tentativeG = currentNode.f + direction.cost;
+            if (tentativeG < neighborNode.f) {
                 neighborNode.parent = currentNode;
-                neighborNode.g = tentativeG;
-                neighborNode.updateF();
+                neighborNode.f = tentativeG;
             }
         }
     }
-
-    // 没有找到路径
     return {
         path: [],
         found: false,

@@ -4,8 +4,12 @@ import type { Cell } from './components/Grid';
 import { CellType } from './components/Grid';
 import ControlPanel from './components/ControlPanel';
 import { findPathAStar } from './algorithms/astar';
-import { findPathAstar as  findPathAstarWasm} from 'a-star';
-import type { AStarResult, AStarResultWasm } from './algorithms/astar';
+import { findPathBFS } from './algorithms/bfs';
+import { findPathAstar as findPathAstarWasm } from 'a-star';
+import { findPathDijkstra } from './algorithms/Dijkstra';
+import type { AStarResult } from './algorithms/astar';
+import type { BFSResult } from './algorithms/bfs';
+import type { DijkstraResult } from './algorithms/Dijkstra';
 import './App.css';
 
 // 网格交互模式
@@ -68,14 +72,13 @@ function App() {
     const handleCellClick = useCallback(
         (x: number, y: number) => {
             if (isRunning) return;
-            console.log(interactionMode);
             setGrid(prevGrid => {
                 const newGrid = prevGrid.map(row => [...row]);
                 const cell = newGrid[y][x];
 
                 // 清除路径
-                for (let row of newGrid) {
-                    for (let cell of row) {
+                for (const row of newGrid) {
+                    for (const cell of row) {
                         if (cell.type === CellType.PATH) {
                             cell.type = CellType.EMPTY;
                         }
@@ -111,7 +114,6 @@ function App() {
                         } else if (cell.type === CellType.EMPTY) {
                             cell.type = CellType.OBSTACLE;
                         }
-                        console.log(cell);
                         break;
                 }
 
@@ -158,8 +160,8 @@ function App() {
             const newGrid = prevGrid.map(row => [...row]);
 
             // 清除之前的路径
-            for (let row of newGrid) {
-                for (let cell of row) {
+            for (const row of newGrid) {
+                for (const cell of row) {
                     if (cell.type === CellType.PATH) {
                         cell.type = CellType.EMPTY;
                     }
@@ -197,15 +199,87 @@ function App() {
             );
 
             setJsTime(result.executionTime);
+            console.log('js a*:', result);
 
             if (result.found && result.path.length > 0) {
-                console.log(result.path)
                 displayPath(result.path);
             } else {
                 alert('未找到路径！');
             }
         } catch (error) {
             console.error('JavaScript A*算法执行错误:', error);
+            alert('算法执行出错！');
+        } finally {
+            setIsRunning(false);
+        }
+    }, [startPoint, endPoint, isRunning, gridToBooleanArray, displayPath]);
+
+    /**
+     * 运行JavaScript bfs算法
+     */
+    const handleRunBFSAlgorithm = useCallback(async () => {
+        if (!startPoint || !endPoint || isRunning) return;
+
+        setIsRunning(true);
+
+        try {
+            const boolGrid = gridToBooleanArray();
+            const result: BFSResult = findPathBFS(
+                boolGrid,
+                startPoint.x,
+                startPoint.y,
+                endPoint.x,
+                endPoint.y
+            );
+            if (result.timeout) {
+                alert('BFS算法执行超时（超过3000ms），已暂停执行！');
+                return;
+            }
+
+            setJsTime(result.executionTime);
+            console.log('js bfs:', result);
+
+            if (result.found && result.path.length > 0) {
+                displayPath(result.path);
+            } else {
+                alert('未找到路径！');
+            }
+        } catch (error) {
+            console.error('JavaScript bfs算法执行错误:', error);
+            alert('算法执行出错！');
+        } finally {
+            setIsRunning(false);
+        }
+    }, [startPoint, endPoint, isRunning, gridToBooleanArray, displayPath]);
+
+    /**
+     * 运行JavaScript Dijkstra算法
+     */
+    const handleRunDijkstraAlgorithm = useCallback(async () => {
+        if (!startPoint || !endPoint || isRunning) return;
+
+        setIsRunning(true);
+
+        try {
+            const boolGrid = gridToBooleanArray();
+            const result: DijkstraResult = findPathDijkstra(
+                boolGrid,
+                startPoint.x,
+                startPoint.y,
+                endPoint.x,
+                endPoint.y
+            );
+
+            setJsTime(result.executionTime);
+            console.log('js dijkstra:', result);
+
+            if (result.found && result.path.length > 0) {
+                displayPath(result.path);
+            } else {
+                alert('未找到路径！');
+            }
+        } catch (error) {
+            console.error('JavaScript Dijkstra算法执行错误:', error);
             alert('算法执行出错！');
         } finally {
             setIsRunning(false);
@@ -221,31 +295,30 @@ function App() {
         setIsRunning(true);
 
         try {
-            // TODO: 这里将来会替换为真正的AssemblyScript实现
             const boolGrid = gridToBooleanArray();
-            const result: Array<string> = findPathAstarWasm(
+            const result: Array<string> | null = findPathAstarWasm(
                 boolGrid,
                 startPoint.x,
                 startPoint.y,
                 endPoint.x,
                 endPoint.y
             );
-            // 模拟AssemblyScript的性能优势
-            // const simulatedTime = result.executionTime * 0.7;
 
-            const finalRes=result;
+            const finalRes = result;
             if (finalRes) {
-                const time=result.pop() as string;
+                const time = result.pop() as string;
                 setWasmTime(parseFloat(time));
-                const finalPath: { x: number; y: number }[] = result.map(item=>{
-                    const arr=item.split('-')
-                    return {
-                        x:parseInt(arr[0]),
-                        y:parseInt(arr[1])
+                const finalPath: { x: number; y: number }[] = result.map(
+                    item => {
+                        const arr = item.split('-');
+                        return {
+                            x: parseInt(arr[0]),
+                            y: parseInt(arr[1]),
+                        };
                     }
-                })
-                console.log(finalPath)
+                );
                 displayPath(finalPath);
+                console.log('wasm a*:', finalRes);
             } else {
                 alert('未找到路径！');
             }
@@ -260,7 +333,7 @@ function App() {
     // 初始化网格
     useEffect(() => {
         initializeGrid();
-    }, [initializeGrid,obstacleProbability]);
+    }, [initializeGrid, obstacleProbability]);
 
     return (
         <div className='app'>
@@ -286,7 +359,9 @@ function App() {
                     onHeightChange={setHeight}
                     onClearGrid={handleClearGrid}
                     onRunJSAlgorithm={handleRunJSAlgorithm}
+                    onRunBFSAlgorithm={handleRunBFSAlgorithm}
                     onRunWASMAlgorithm={handleRunWASMAlgorithm}
+                    onRunDijkstraAlgorithm={handleRunDijkstraAlgorithm}
                     isRunning={isRunning}
                     jsTime={jsTime}
                     wasmTime={wasmTime}

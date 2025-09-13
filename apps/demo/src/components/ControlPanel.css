@@ -118,6 +118,26 @@
     transform: translateY(-1px);
 }
 
+.bfs-button {
+    background-color: #28a745;
+    color: white;
+}
+
+.bfs-button:hover:not(:disabled) {
+    background-color: #218838;
+    transform: translateY(-1px);
+}
+
+.dijkstra-button {
+    background-color: #007bff;
+    color: white;
+}
+
+.dijkstra-button:hover:not(:disabled) {
+    background-color: #0069d9;
+    transform: translateY(-1px);
+}
+
 .wasm-button {
     background-color: #17a2b8;
     color: white;
@@ -203,21 +223,21 @@
         margin: 10px;
         padding: 15px;
     }
-    
+
     .input-group {
         flex-direction: column;
         gap: 10px;
     }
-    
+
     .algorithm-buttons {
         flex-direction: column;
     }
-    
+
     .algorithm-button {
         min-width: auto;
         width: 100%;
     }
-    
+
     .result-item {
         flex-direction: column;
         align-items: flex-start;

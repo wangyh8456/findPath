@@ -16,7 +16,14 @@ class AStarNode {
     }
 
     calculateH(endX: i32, endY: i32): void {
-        this.h = <f64>(Math.pow(this.x - endX, 2) + Math.pow(this.y - endY, 2));
+        //欧几里得距离
+        // this.h = <f64>(Math.sqrt(Math.pow(this.x - endX, 2) + Math.pow(this.y - endY, 2)));
+        //曼哈顿距离
+        // this.h = <f64>(Math.abs(this.x - endX) + Math.abs(this.y - endY));
+        //切比雪夫距离
+        this.h = <f64>(
+            Math.max(Math.abs(this.x - endX), Math.abs(this.y - endY))
+        );
     }
 
     updateF(): void {
@@ -40,10 +47,10 @@ export class AStarResult {
     found: bool;
     time: f64;
 
-    constructor(path: PathPoint[], found: bool,time:f64) {
+    constructor(path: PathPoint[], found: bool, time: f64) {
         this.path = path;
         this.found = found;
-        this.time=time;
+        this.time = time;
     }
 }
 
@@ -60,26 +67,32 @@ class Direction {
 }
 
 // 判断斜对角是否被障碍物阻挡
-const isDiagonalBlocked = (grid: bool[][], x: i32, y: i32, dx: i32, dy: i32): bool => {
+const isDiagonalBlocked = (
+    grid: bool[][],
+    x: i32,
+    y: i32,
+    dx: i32,
+    dy: i32
+): bool => {
     if (dx == 0 || dy == 0) {
         return false;
     }
     const checkX: bool = grid[y][x + dx];
     const checkY: bool = grid[y + dy][x];
     return checkX || checkY;
-}
+};
 
-export function getAStarResultByPtr(result: usize): Array<String>|null{
-    let found=changetype<AStarResult>(result).found;
-    if(found){
-        let path=changetype<AStarResult>(result).path;
-        let pathStr:Array<String>=[];
-        for(let i=0;i<path.length;i++){
+export function getAStarResultByPtr(result: usize): Array<String> | null {
+    let found = changetype<AStarResult>(result).found;
+    if (found) {
+        let path = changetype<AStarResult>(result).path;
+        let pathStr: Array<String> = [];
+        for (let i = 0; i < path.length; i++) {
             pathStr.push(`${path[i].x}-${path[i].y}`);
         }
         pathStr.push(`${changetype<AStarResult>(result).time}`);
         return pathStr;
-    }else{
+    } else {
         return null;
     }
 }
@@ -95,27 +108,42 @@ export function findPathAstar(
     //  return;
     const width: i32 = grid[0].length as i32;
     const height: i32 = grid.length as i32;
-    let startTime:f64=performance.now();
+    let startTime: f64 = performance.now();
 
     // 检查起点和终点是否有效
-    if (startX < 0 || startX >= width || startY < 0 || startY >= height || endX < 0 || endX >= width || endY < 0 || endY >= height || grid[startY][startX] || grid[endY][endX]) {
-        return new AStarResult([], false,performance.now()-startTime);
+    if (
+        startX < 0 ||
+        startX >= width ||
+        startY < 0 ||
+        startY >= height ||
+        endX < 0 ||
+        endX >= width ||
+        endY < 0 ||
+        endY >= height ||
+        grid[startY][startX] ||
+        grid[endY][endX]
+    ) {
+        return new AStarResult([], false, performance.now() - startTime);
     }
 
     // 如果起点等于终点
     if (startX == endX && startY == endY) {
-        return new AStarResult([new PathPoint(startX, startY)], true,performance.now()-startTime);
+        return new AStarResult(
+            [new PathPoint(startX, startY)],
+            true,
+            performance.now() - startTime
+        );
     }
 
     const openList: AStarNode[] = [];
-    const nodeMap = new Map<String,AStarNode>();
-    const closedList=new Set<String>();
+    const nodeMap = new Map<String, AStarNode>();
+    const closedList = new Set<String>();
 
     const startNode: AStarNode = new AStarNode(startX, startY);
     startNode.calculateH(endX, endY);
     startNode.updateF();
     openList.push(startNode);
-    nodeMap.set(`${startX},${startY}`,startNode);
+    nodeMap.set(`${startX},${startY}`, startNode);
 
     while (openList.length > 0) {
         let currentIndex: i32 = 0;
@@ -130,7 +158,7 @@ export function findPathAstar(
         }
 
         openList.splice(currentIndex, 1);
-        closedList.add(`${currentNode.x},${currentNode.y}`);  // 存储节点位置避免重复
+        closedList.add(`${currentNode.x},${currentNode.y}`); // 存储节点位置避免重复
 
         // 到达目标点
         if (currentNode.x === endX && currentNode.y === endY) {
@@ -142,7 +170,7 @@ export function findPathAstar(
                 node = node.parent;
             }
 
-            return new AStarResult(path, true,performance.now()-startTime);
+            return new AStarResult(path, true, performance.now() - startTime);
         }
 
         // 方向数组
@@ -154,7 +182,7 @@ export function findPathAstar(
             new Direction(1, 1, Math.SQRT2),
             new Direction(1, -1, Math.SQRT2),
             new Direction(-1, 1, Math.SQRT2),
-            new Direction(-1, -1, Math.SQRT2)
+            new Direction(-1, -1, Math.SQRT2),
         ];
 
         // 遍历8个方向
@@ -168,23 +196,30 @@ export function findPathAstar(
             const newKey: String = `${newX},${newY}`;
 
             // 如果超出边界或是障碍物或在closedList中，则跳过
-            if (newX < 0 || newX >= width || newY < 0 || newY >= height || grid[newY][newX] || closedList.has(newKey)) {
+            if (
+                newX < 0 ||
+                newX >= width ||
+                newY < 0 ||
+                newY >= height ||
+                grid[newY][newX] ||
+                closedList.has(newKey)
+            ) {
                 continue;
             }
 
             // 检查斜对角是否被阻挡
-            if (isDiagonalBlocked(grid,currentNode.x, currentNode.y, dx, dy)) {
+            if (isDiagonalBlocked(grid, currentNode.x, currentNode.y, dx, dy)) {
                 continue;
             }
 
             // let neighborNodeIndex: i32 = nodeMap.findIndex(node => node.x === newX && node.y === newY);
-            let neighborNode: AStarNode|null = null;
+            let neighborNode: AStarNode | null = null;
             if (nodeMap.has(newKey)) {
                 neighborNode = nodeMap.get(newKey);
             } else {
                 neighborNode = new AStarNode(newX, newY);
                 neighborNode.calculateH(endX, endY);
-                nodeMap.set(newKey,neighborNode);
+                nodeMap.set(newKey, neighborNode);
                 openList.push(neighborNode);
             }
 
@@ -198,5 +233,5 @@ export function findPathAstar(
         }
     }
 
-    return new AStarResult([], false,performance.now()-startTime);
+    return new AStarResult([], false, performance.now() - startTime);
 }

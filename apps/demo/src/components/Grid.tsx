@@ -7,7 +7,7 @@ export enum CellType {
     START = 'start',
     END = 'end',
     OBSTACLE = 'obstacle',
-    PATH = 'path',
+    PATH = 'path'
 }
 
 // 网格单元格接口
@@ -46,12 +46,12 @@ const Grid: React.FC<GridProps> = ({ width, height, grid, onCellClick }) => {
     };
 
     return (
-        <div className='grid-container'>
-            <div
-                className='grid'
+        <div className="grid-container">
+            <div 
+                className="grid"
                 style={{
                     gridTemplateColumns: `repeat(${width}, 1fr)`,
-                    gridTemplateRows: `repeat(${height}, 1fr)`,
+                    gridTemplateRows: `repeat(${height}, 1fr)`
                 }}
             >
                 {grid.map((row, y) =>

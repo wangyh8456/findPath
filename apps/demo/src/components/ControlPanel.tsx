@@ -13,7 +13,9 @@ interface ControlPanelProps {
     onHeightChange: (height: number) => void;
     onClearGrid: () => void;
     onRunJSAlgorithm: () => void;
+    onRunBFSAlgorithm: () => void;
     onRunWASMAlgorithm: () => void;
+    onRunDijkstraAlgorithm: () => void;
     isRunning: boolean;
     jsTime?: number;
     wasmTime?: number;
@@ -32,16 +34,21 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     onHeightChange,
     onClearGrid,
     onRunJSAlgorithm,
+    onRunBFSAlgorithm,
     onRunWASMAlgorithm,
+    onRunDijkstraAlgorithm,
     isRunning,
     jsTime,
-    wasmTime
+    wasmTime,
 }) => {
     /**
      * 处理宽度输入变化
      */
     const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newWidth = Math.max(5, Math.min(MAX_SIZE, parseInt(e.target.value) || 10));
+        const newWidth = Math.max(
+            5,
+            Math.min(MAX_SIZE, parseInt(e.target.value) || 10)
+        );
         onWidthChange(newWidth);
     };
 
@@ -49,7 +56,10 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
      * 处理高度输入变化
      */
     const handleHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newHeight = Math.max(5, Math.min(MAX_SIZE, parseInt(e.target.value) || 10));
+        const newHeight = Math.max(
+            5,
+            Math.min(MAX_SIZE, parseInt(e.target.value) || 10)
+        );
         onHeightChange(newHeight);
     };
 
@@ -62,15 +72,15 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     };
 
     return (
-        <div className="control-panel">
-            <div className="control-section">
+        <div className='control-panel'>
+            <div className='control-section'>
                 <h3>网格设置</h3>
-                <div className="input-group">
+                <div className='input-group'>
                     <label>
                         宽度 (5-{MAX_SIZE}):
                         <input
-                            type="number"
-                            min="5"
+                            type='number'
+                            min='5'
                             max={MAX_SIZE}
                             value={width}
                             onChange={handleWidthChange}
@@ -80,8 +90,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                     <label>
                         高度 (5-{MAX_SIZE}):
                         <input
-                            type="number"
-                            min="5"
+                            type='number'
+                            min='5'
                             max={MAX_SIZE}
                             value={height}
                             onChange={handleHeightChange}
@@ -89,44 +99,62 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                         />
                     </label>
                 </div>
-                <button 
-                    className="clear-button"
+                <button
+                    className='clear-button'
                     onClick={onClearGrid}
                     disabled={isRunning}
                 >
                     清空网格
                 </button>
             </div>
-            <div className="control-section">
+            <div className='control-section'>
                 <h3>初始障碍物密度</h3>
-                <div className="input-group">
+                <div className='input-group'>
                     <label>
                         障碍物密度 (0-1):
                         <input
-                            type="number"
-                            min="0"
-                            max="1"
-                            step="0.01"
+                            type='number'
+                            min='0'
+                            max='1'
+                            step='0.01'
                             value={obstacleProbability}
-                            onChange={(e) => onObstacleProbabilityChange(parseFloat(e.target.value))}
+                            onChange={e =>
+                                onObstacleProbabilityChange(
+                                    parseFloat(e.target.value)
+                                )
+                            }
                             disabled={isRunning}
                         />
                     </label>
                 </div>
             </div>
 
-            <div className="control-section">
+            <div className='control-section'>
                 <h3>算法比较</h3>
-                <div className="algorithm-buttons">
+                <div className='algorithm-buttons'>
                     <button
-                        className="algorithm-button js-button"
+                        className='algorithm-button js-button'
                         onClick={onRunJSAlgorithm}
                         disabled={isRunning}
                     >
                         {isRunning ? '运行中...' : 'JavaScript A*'}
                     </button>
                     <button
-                        className="algorithm-button wasm-button"
+                        className='algorithm-button bfs-button'
+                        onClick={onRunBFSAlgorithm}
+                        disabled={isRunning}
+                    >
+                        {isRunning ? '运行中...' : 'BFS'}
+                    </button>
+                    <button
+                        className='algorithm-button dijkstra-button'
+                        onClick={onRunDijkstraAlgorithm}
+                        disabled={isRunning}
+                    >
+                        {isRunning ? '运行中...' : 'Dijkstra'}
+                    </button>
+                    <button
+                        className='algorithm-button wasm-button'
                         onClick={onRunWASMAlgorithm}
                         disabled={isRunning}
                     >
@@ -135,21 +163,25 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 </div>
             </div>
 
-            <div className="control-section">
+            <div className='control-section'>
                 <h3>性能结果</h3>
-                <div className="performance-results">
-                    <div className="result-item">
-                        <span className="result-label">JavaScript:</span>
-                        <span className="result-value js-time">{formatTime(jsTime)}</span>
+                <div className='performance-results'>
+                    <div className='result-item'>
+                        <span className='result-label'>JavaScript:</span>
+                        <span className='result-value js-time'>
+                            {formatTime(jsTime)}
+                        </span>
                     </div>
-                    <div className="result-item">
-                        <span className="result-label">AssemblyScript:</span>
-                        <span className="result-value wasm-time">{formatTime(wasmTime)}</span>
+                    <div className='result-item'>
+                        <span className='result-label'>AssemblyScript:</span>
+                        <span className='result-value wasm-time'>
+                            {formatTime(wasmTime)}
+                        </span>
                     </div>
                     {jsTime !== undefined && wasmTime !== undefined && (
-                        <div className="result-item comparison">
-                            <span className="result-label">性能提升:</span>
-                            <span className="result-value">
+                        <div className='result-item comparison'>
+                            <span className='result-label'>性能提升:</span>
+                            <span className='result-value'>
                                 {((jsTime / wasmTime - 1) * 100).toFixed(1)}%
                             </span>
                         </div>
@@ -157,7 +189,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 </div>
             </div>
 
-            <div className="instructions">
+            <div className='instructions'>
                 <h4>使用说明:</h4>
                 <ul>
                     <li>点击网格设置起点（绿色）</li>
