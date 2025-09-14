@@ -1,0 +1,23 @@
+[package]
+name = "a-star-rust"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = {version="0.2",features = ["serde-serialize"]}
+js-sys = "0.3"
+web-sys = { version = "0.3", features = ["console"] }
+serde = { version = "1.0", features = ["derive"] }
+serde-wasm-bindgen = "0.4"
+
+
+# 优化 WebAssembly 输出大小
+[profile.release]
+opt-level = "s"
+lto = true
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false

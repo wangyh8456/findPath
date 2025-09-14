@@ -36,3 +36,6 @@ Thumbs.db
 *.tmp
 *.temp
 .history
+
+packages/a-star-rust/target
+packages/a-star-rust/pkg

@@ -1,0 +1,22 @@
+{
+    "name": "a-star-rust",
+    "version": "0.1.0",
+    "description": "A* pathfinding algorithm implemented in Rust for WebAssembly",
+    "main": "pkg/a_star_rust.js",
+    "types": "pkg/a_star_rust.d.ts",
+    "files": [
+        "pkg"
+    ],
+    "scripts": {
+        "build": "wasm-pack build --target web --out-dir pkg",
+        "build:release": "wasm-pack build --target web --out-dir pkg --release"
+    },
+    "keywords": [
+        "pathfinding",
+        "astar",
+        "rust",
+        "webassembly"
+    ],
+    "author": "",
+    "license": "ISC"
+}

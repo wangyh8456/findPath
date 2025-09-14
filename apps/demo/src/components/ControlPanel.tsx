@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState, useLayoutEffect } from 'react';
 import './ControlPanel.css';
+import ReactECharts from 'echarts-for-react'; // or var ReactECharts = require('echarts-for-react');
 
 const MAX_SIZE = 100;
 
@@ -7,6 +8,14 @@ const MAX_SIZE = 100;
 interface ControlPanelProps {
     width: number;
     height: number;
+    allTimes: {
+        jsTime?: number;
+        bfsTime?: number;
+        dijkstraTime?: number;
+        wasmTime?: number;
+        rustTime?: number;
+    }[];
+    isAllRuning: boolean;
     obstacleProbability: number;
     onObstacleProbabilityChange: (probability: number) => void;
     onWidthChange: (width: number) => void;
@@ -16,6 +25,8 @@ interface ControlPanelProps {
     onRunBFSAlgorithm: () => void;
     onRunWASMAlgorithm: () => void;
     onRunDijkstraAlgorithm: () => void;
+    onRunRustAstarAlgorithm: () => void;
+    onRunAllAlgorithm: () => void;
     isRunning: boolean;
     jsTime?: number;
     wasmTime?: number;
@@ -29,6 +40,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     width,
     height,
     obstacleProbability,
+    allTimes,
+    isAllRuning,
     onObstacleProbabilityChange,
     onWidthChange,
     onHeightChange,
@@ -37,6 +50,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     onRunBFSAlgorithm,
     onRunWASMAlgorithm,
     onRunDijkstraAlgorithm,
+    onRunRustAstarAlgorithm,
+    onRunAllAlgorithm,
     isRunning,
     jsTime,
     wasmTime,
@@ -61,6 +76,102 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
             Math.min(MAX_SIZE, parseInt(e.target.value) || 10)
         );
         onHeightChange(newHeight);
+    };
+
+    useEffect(() => {
+        console.log('isAllRuning', isAllRuning);
+        console.log('running', isRunning);
+    }, [isAllRuning, isRunning]);
+
+    const [chartData, setChartData] = useState({});
+
+    useLayoutEffect(() => {
+        handleChartData();
+    }, [allTimes]);
+
+    const handleChartData = () => {
+        const temp = {
+            title: {
+                text: '算法性能对比 - 10次测试结果',
+                left: 'center',
+            },
+            tooltip: {
+                trigger: 'axis',
+                formatter: function (params) {
+                    let result = params[0].axisValueLabel + '<br/>';
+                    params.forEach(param => {
+                        result +=
+                            param.marker +
+                            param.seriesName +
+                            ': ' +
+                            param.value +
+                            'ms<br/>';
+                    });
+                    return result;
+                },
+            },
+            legend: {
+                data: [
+                    'JavaScript A*',
+                    'BFS',
+                    'Dijkstra',
+                    'AssemblyScript A*',
+                    'Rust A*',
+                ],
+                top: 30,
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true,
+            },
+            yAxis: {
+                type: 'log',
+                logBase: 10,
+                name: '执行时间 (ms)',
+            },
+            xAxis: {
+                type: 'category',
+                data: allTimes.map((_, index) => `测试${index + 1}`),
+            },
+            series: [
+                {
+                    name: 'JavaScript A*',
+                    type: 'line',
+                    data: [],
+                },
+                {
+                    name: 'BFS',
+                    type: 'line',
+                    data: [],
+                },
+                {
+                    name: 'Dijkstra',
+                    type: 'line',
+                    data: [],
+                },
+                {
+                    name: 'AssemblyScript A*',
+                    type: 'line',
+                    data: [],
+                },
+                {
+                    name: 'Rust A*',
+                    type: 'line',
+                    data: [],
+                },
+            ],
+        };
+        allTimes.forEach(times => {
+            temp.series[0].data.push(times.jsTime);
+            temp.series[1].data.push(times.bfsTime);
+            temp.series[2].data.push(times.dijkstraTime);
+            temp.series[3].data.push(times.wasmTime);
+            temp.series[4].data.push(times.rustTime);
+        });
+        setChartData(temp);
+        return temp;
     };
 
     /**
@@ -134,31 +245,42 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 <div className='algorithm-buttons'>
                     <button
                         className='algorithm-button js-button'
-                        onClick={onRunJSAlgorithm}
+                        onClick={() => onRunJSAlgorithm()}
                         disabled={isRunning}
                     >
-                        {isRunning ? '运行中...' : 'JavaScript A*'}
+                        {isRunning || isAllRuning
+                            ? '运行中...'
+                            : 'JavaScript A*'}
                     </button>
                     <button
                         className='algorithm-button bfs-button'
-                        onClick={onRunBFSAlgorithm}
+                        onClick={() => onRunBFSAlgorithm()}
                         disabled={isRunning}
                     >
-                        {isRunning ? '运行中...' : 'BFS'}
+                        {isRunning || isAllRuning ? '运行中...' : 'BFS'}
                     </button>
                     <button
                         className='algorithm-button dijkstra-button'
-                        onClick={onRunDijkstraAlgorithm}
+                        onClick={() => onRunDijkstraAlgorithm()}
                         disabled={isRunning}
                     >
-                        {isRunning ? '运行中...' : 'Dijkstra'}
+                        {isRunning || isAllRuning ? '运行中...' : 'Dijkstra'}
                     </button>
                     <button
                         className='algorithm-button wasm-button'
-                        onClick={onRunWASMAlgorithm}
+                        onClick={() => onRunWASMAlgorithm()}
                         disabled={isRunning}
                     >
-                        {isRunning ? '运行中...' : 'AssemblyScript A*'}
+                        {isRunning || isAllRuning
+                            ? '运行中...'
+                            : 'AssemblyScript A*'}
+                    </button>
+                    <button
+                        className='algorithm-button rust-button'
+                        onClick={() => onRunRustAstarAlgorithm()}
+                        disabled={isRunning}
+                    >
+                        {isRunning || isAllRuning ? '运行中...' : 'Rust A*'}
                     </button>
                 </div>
             </div>
@@ -187,6 +309,22 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                         </div>
                     )}
                 </div>
+            </div>
+
+            <div className='control-section'>
+                <h3>性能对比</h3>
+                <div className='algorithm-buttons'>
+                    <button
+                        className='algorithm-button rust-button'
+                        onClick={onRunAllAlgorithm}
+                        disabled={isAllRuning}
+                    >
+                        {isAllRuning || isRunning ? '运行中...' : '综合测试'}
+                    </button>
+                </div>
+                {allTimes.length > 0 ? (
+                    <ReactECharts option={chartData} />
+                ) : null}
             </div>
 
             <div className='instructions'>

@@ -10,6 +10,8 @@ import { findPathDijkstra } from './algorithms/Dijkstra';
 import type { AStarResult } from './algorithms/astar';
 import type { BFSResult } from './algorithms/bfs';
 import type { DijkstraResult } from './algorithms/Dijkstra';
+import init, { find_path_astar as findPathAstarRust } from 'a-star-rust';
+
 import './App.css';
 
 // 网格交互模式
@@ -38,8 +40,18 @@ function App() {
         InteractionMode.SET_START
     );
     const [isRunning, setIsRunning] = useState(false);
+    const [isAllRuning, setIsAllRuning] = useState(false);
     const [jsTime, setJsTime] = useState<number | undefined>(undefined);
     const [wasmTime, setWasmTime] = useState<number | undefined>(undefined);
+    const [allTimes, setAllTimes] = useState<
+        {
+            jsTime?: number;
+            bfsTime?: number;
+            dijkstraTime?: number;
+            wasmTime?: number;
+            rustTime?: number;
+        }[]
+    >([]);
 
     /**
      * 初始化网格
@@ -64,6 +76,7 @@ function App() {
         setInteractionMode(InteractionMode.SET_START);
         setJsTime(undefined);
         setWasmTime(undefined);
+        setAllTimes([]);
     }, [width, height]);
 
     /**
@@ -183,7 +196,7 @@ function App() {
     /**
      * 运行JavaScript A*算法
      */
-    const handleRunJSAlgorithm = useCallback(async () => {
+    const handleRunJSAlgorithm = async (allTimesMode: boolean = false) => {
         if (!startPoint || !endPoint || isRunning) return;
 
         setIsRunning(true);
@@ -199,25 +212,28 @@ function App() {
             );
 
             setJsTime(result.executionTime);
-            console.log('js a*:', result);
+            console.log('js a*:', result, allTimesMode);
 
             if (result.found && result.path.length > 0) {
                 displayPath(result.path);
-            } else {
+            } else if (!allTimesMode) {
                 alert('未找到路径！');
             }
+            return result;
         } catch (error) {
             console.error('JavaScript A*算法执行错误:', error);
             alert('算法执行出错！');
         } finally {
-            setIsRunning(false);
+            setTimeout(() => {
+                setIsRunning(false);
+            }, 0);
         }
-    }, [startPoint, endPoint, isRunning, gridToBooleanArray, displayPath]);
+    };
 
     /**
      * 运行JavaScript bfs算法
      */
-    const handleRunBFSAlgorithm = useCallback(async () => {
+    const handleRunBFSAlgorithm = async (allTimesMode: boolean = false) => {
         if (!startPoint || !endPoint || isRunning) return;
 
         setIsRunning(true);
@@ -241,21 +257,26 @@ function App() {
 
             if (result.found && result.path.length > 0) {
                 displayPath(result.path);
-            } else {
+            } else if (!allTimesMode) {
                 alert('未找到路径！');
             }
+            return result;
         } catch (error) {
             console.error('JavaScript bfs算法执行错误:', error);
             alert('算法执行出错！');
         } finally {
-            setIsRunning(false);
+            setTimeout(() => {
+                setIsRunning(false);
+            }, 0);
         }
-    }, [startPoint, endPoint, isRunning, gridToBooleanArray, displayPath]);
+    };
 
     /**
      * 运行JavaScript Dijkstra算法
      */
-    const handleRunDijkstraAlgorithm = useCallback(async () => {
+    const handleRunDijkstraAlgorithm = async (
+        allTimesMode: boolean = false
+    ) => {
         if (!startPoint || !endPoint || isRunning) return;
 
         setIsRunning(true);
@@ -275,21 +296,62 @@ function App() {
 
             if (result.found && result.path.length > 0) {
                 displayPath(result.path);
-            } else {
+            } else if (!allTimesMode) {
                 alert('未找到路径！');
             }
+            return result;
         } catch (error) {
             console.error('JavaScript Dijkstra算法执行错误:', error);
             alert('算法执行出错！');
         } finally {
-            setIsRunning(false);
+            setTimeout(() => {
+                setIsRunning(false);
+            }, 0);
         }
-    }, [startPoint, endPoint, isRunning, gridToBooleanArray, displayPath]);
+    };
+
+    /**
+     * 运行rust a*算法
+     */
+    const handleRustAstarAlgorithm = async (allTimesMode: boolean = false) => {
+        if (!startPoint || !endPoint || isRunning) return;
+
+        setIsRunning(true);
+
+        try {
+            const boolGrid = gridToBooleanArray();
+            await init();
+            const result: AStarResult = findPathAstarRust(
+                boolGrid,
+                startPoint.x,
+                startPoint.y,
+                endPoint.x,
+                endPoint.y
+            );
+
+            setWasmTime(result.executionTime);
+            console.log('rust a*:', result);
+
+            if (result.found && result.path.length > 0) {
+                displayPath(result.path);
+            } else if (!allTimesMode) {
+                alert('未找到路径！');
+            }
+            return result;
+        } catch (error) {
+            console.error('Rust A*算法执行错误:', error);
+            alert('算法执行出错！');
+        } finally {
+            setTimeout(() => {
+                setIsRunning(false);
+            }, 0);
+        }
+    };
 
     /**
      * 运行AssemblyScript A*算法（暂时使用JavaScript实现）
      */
-    const handleRunWASMAlgorithm = useCallback(async () => {
+    const handleRunWASMAlgorithm = async (allTimesMode: boolean = false) => {
         if (!startPoint || !endPoint || isRunning) return;
 
         setIsRunning(true);
@@ -305,8 +367,10 @@ function App() {
             );
 
             const finalRes = result;
+            let res;
             if (finalRes) {
                 const time = result.pop() as string;
+                res = time;
                 setWasmTime(parseFloat(time));
                 const finalPath: { x: number; y: number }[] = result.map(
                     item => {
@@ -319,16 +383,59 @@ function App() {
                 );
                 displayPath(finalPath);
                 console.log('wasm a*:', finalRes);
-            } else {
+            } else if (!allTimesMode) {
                 alert('未找到路径！');
             }
+            return res;
         } catch (error) {
             console.error('AssemblyScript A*算法执行错误:', error);
             alert('算法执行出错！');
         } finally {
-            setIsRunning(false);
+            setTimeout(() => {
+                setIsRunning(false);
+            }, 0);
         }
-    }, [startPoint, endPoint, isRunning, gridToBooleanArray, displayPath]);
+    };
+
+    /**
+     * 运行所有算法
+     */
+    const handleRunAllAlgorithm = async () => {
+        if (!startPoint || !endPoint || isRunning || isAllRuning) return;
+        console.log('allrunning');
+        setIsAllRuning(true);
+        const arr = [];
+        try {
+            let times = 10;
+            while (times--) {
+                let jsTime = await handleRunJSAlgorithm(true);
+                let bfsTime = await handleRunBFSAlgorithm(true);
+                let dijkstraTime = await handleRunDijkstraAlgorithm(true);
+                let wasmTime = await handleRunWASMAlgorithm(true);
+                let rustTime = await handleRustAstarAlgorithm(true);
+                if (!wasmTime) {
+                    return alert('找不到路径！');
+                }
+                arr.push({
+                    jsTime: jsTime?.executionTime.toFixed(2),
+                    bfsTime: bfsTime?.executionTime.toFixed(2),
+                    dijkstraTime: dijkstraTime?.executionTime.toFixed(2),
+                    wasmTime: wasmTime
+                        ? parseFloat(wasmTime).toFixed(2)
+                        : Infinity,
+                    rustTime: rustTime?.executionTime.toFixed(2),
+                });
+            }
+            setAllTimes(arr);
+        } catch (error) {
+            console.error('运行所有算法错误:', error);
+            alert('算法执行出错！');
+        } finally {
+            setTimeout(() => {
+                setIsAllRuning(false);
+            }, 0);
+        }
+    };
 
     // 初始化网格
     useEffect(() => {
@@ -353,6 +460,7 @@ function App() {
                 <ControlPanel
                     width={width}
                     height={height}
+                    allTimes={allTimes}
                     obstacleProbability={obstacleProbability}
                     onObstacleProbabilityChange={setObstacleProbability}
                     onWidthChange={setWidth}
@@ -362,7 +470,10 @@ function App() {
                     onRunBFSAlgorithm={handleRunBFSAlgorithm}
                     onRunWASMAlgorithm={handleRunWASMAlgorithm}
                     onRunDijkstraAlgorithm={handleRunDijkstraAlgorithm}
+                    onRunRustAstarAlgorithm={handleRustAstarAlgorithm}
+                    onRunAllAlgorithm={handleRunAllAlgorithm}
                     isRunning={isRunning}
+                    isAllRuning={isAllRuning}
                     jsTime={jsTime}
                     wasmTime={wasmTime}
                 />

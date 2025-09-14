@@ -16,13 +16,17 @@ class AStarNode {
     }
 
     calculateH(endX: i32, endY: i32): void {
-        //欧几里得距离
-        // this.h = <f64>(Math.sqrt(Math.pow(this.x - endX, 2) + Math.pow(this.y - endY, 2)));
+        // 欧几里得距离;
+        // this.h = <f64>(
+        //     Math.sqrt(Math.pow(this.x - endX, 2) + Math.pow(this.y - endY, 2))
+        // );
         //曼哈顿距离
         // this.h = <f64>(Math.abs(this.x - endX) + Math.abs(this.y - endY));
         //切比雪夫距离
         this.h = <f64>(
-            Math.max(Math.abs(this.x - endX), Math.abs(this.y - endY))
+            (Math.abs(this.x - endX) >= Math.abs(this.y - endY)
+                ? Math.abs(this.x - endX)
+                : Math.abs(this.y - endY))
         );
     }
 

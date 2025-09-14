@@ -12,9 +12,11 @@
         "format:check": "prettier --check ."
     },
     "dependencies": {
+        "a-star": "workspace:*",
+        "a-star-rust": "workspace:*",
+        "echarts-for-react": "^3.0.2",
         "react": "^19.1.1",
-        "react-dom": "^19.1.1",
-        "a-star": "workspace:*"
+        "react-dom": "^19.1.1"
     },
     "devDependencies": {
         "@eslint/js": "^9.33.0",
