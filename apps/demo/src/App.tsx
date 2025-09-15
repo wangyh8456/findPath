@@ -446,7 +446,7 @@ function App() {
         <div className='app'>
             <header className='app-header'>
                 <h1>A*算法性能比较</h1>
-                <p>JavaScript vs AssemblyScript 寻路算法性能对比</p>
+                <p>寻路算法性能对比</p>
             </header>
 
             <main className='app-main'>

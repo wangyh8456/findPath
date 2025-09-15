@@ -10,7 +10,7 @@
     ],
     "scripts": {
         "install:packages": "pnpm -r install",
-        "build:lib": "pnpm --filter a-star build",
+        "build:lib": "pnpm --filter a-star asbuild",
         "dev:demo": "pnpm --filter demo dev",
         "build:demo": "pnpm --filter demo build",
         "format": "prettier --write .",

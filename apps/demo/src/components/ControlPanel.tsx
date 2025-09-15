@@ -295,7 +295,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                         </span>
                     </div>
                     <div className='result-item'>
-                        <span className='result-label'>AssemblyScript:</span>
+                        <span className='result-label'>Wasm:</span>
                         <span className='result-value wasm-time'>
                             {formatTime(wasmTime)}
                         </span>
