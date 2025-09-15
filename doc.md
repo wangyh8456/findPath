@@ -133,7 +133,7 @@ packages/a-star/
 ```
 mkdir -p apps/demo
 cd apps/demo
-pnpm run dev
+pnpm create vite@latest . --template react-ts
 ```
 
 安装依赖：
