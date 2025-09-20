@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Virtual Scroll Demo</title>
+        <style>
+            #container {
+                height: 300px;
+                overflow-y: auto;
+                border: 1px solid #ccc;
+                position: relative;
+            }
+            #content {
+                position: relative;
+                width: 100%;
+            }
+            .item {
+                position: absolute;
+                left: 0;
+                right: 0;
+                height: 30px;
+                line-height: 30px;
+                padding-left: 10px;
+                border-bottom: 1px solid #eee;
+                box-sizing: border-box;
+            }
+        </style>
+    </head>
+    <body>
+        <h3>虚拟滚动 Demo（固定高度）</h3>
+        <div id="container">
+            <div id="content"></div>
+        </div>
+
+        <script>
+            const total = 10000; // 总条目数
+            const itemHeight = 30; // 每条高度
+            const containerHeight = 300;
+            const buffer = 5; // 缓冲条数
+
+            const container = document.getElementById('container');
+            const content = document.getElementById('content');
+
+            // 设置内容总高度（撑开滚动条）
+            content.style.height = total * itemHeight + 'px';
+
+            // 渲染逻辑
+            function render() {
+                const scrollTop = container.scrollTop;
+
+                // 计算可见范围
+                const startIndex = Math.max(
+                    0,
+                    Math.floor(scrollTop / itemHeight) - buffer
+                );
+                const endIndex = Math.min(
+                    total - 1,
+                    Math.floor((scrollTop + containerHeight) / itemHeight) +
+                        buffer
+                );
+
+                // 清空后重新渲染
+                content.innerHTML = '';
+                for (let i = startIndex; i <= endIndex; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'item';
+                    div.textContent = 'Item ' + i;
+                    div.style.top = i * itemHeight + 'px';
+                    content.appendChild(div);
+                }
+            }
+
+            // 初始渲染
+            render();
+            // 监听滚动
+            container.addEventListener('scroll', () => {
+                requestAnimationFrame(render);
+            });
+        </script>
+    </body>
+</html>

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Virtual Scroll (Variable Height)</title>
+        <style>
+            #container {
+                height: 300px;
+                overflow-y: auto;
+                border: 1px solid #ccc;
+                position: relative;
+            }
+            #content {
+                position: relative;
+                width: 100%;
+            }
+            .item {
+                position: absolute;
+                left: 0;
+                right: 0;
+                padding: 5px 10px;
+                border-bottom: 1px solid #eee;
+                box-sizing: border-box;
+                background: #fafafa;
+                word-break: break-all;
+            }
+        </style>
+    </head>
+    <body>
+        <h3>虚拟滚动 Demo（高度不固定）</h3>
+        <div id="container">
+            <div id="content"></div>
+        </div>
+
+        <script>
+            const total = 5000; //项目总数
+            const itemHeight = 30; //项目初始高度
+            const container = document.getElementById('container');
+            const content = document.getElementById('content');
+            const buffer = 5; //不可视区域的缓冲数目
+
+            const positions = new Array(total + 1).fill(0);
+            const heights = new Array(total).fill(itemHeight);
+
+            const datas = Array(total)
+                .fill('x'.repeat(Math.floor(Math.random() * 200)))
+                .map((str, i) => 'item' + i + ': ' + str);
+
+            const updatePostions = () => {
+                for (let i = 1; i <= total; i++) {
+                    positions[i] = positions[i - 1] + heights[i - 1];
+                }
+                content.style.height = positions[total] + 'px';
+            };
+            updatePostions();
+
+            const findIndexByBinarySearch = target => {
+                let left = 0,
+                    right = total - 1;
+                while (left <= right) {
+                    let mid = (left + right) >> 1;
+                    if (positions[mid] <= target) {
+                        left = mid + 1;
+                    } else {
+                        right = mid - 1;
+                    }
+                }
+                return right;
+            };
+
+            const render = () => {
+                const scrollTop = container.scrollTop;
+                const startIndex = Math.max(
+                    0,
+                    findIndexByBinarySearch(scrollTop) - buffer
+                );
+                let endIndex = startIndex;
+                while (
+                    endIndex < total &&
+                    positions[endIndex] < scrollTop + container.clientHeight
+                ) {
+                    endIndex++;
+                }
+                endIndex = Math.min(total - 1, endIndex + buffer);
+                console.log(startIndex, endIndex);
+                content.innerHTML = '';
+                for (let i = startIndex; i <= endIndex; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'item';
+                    div.textContent = datas[i];
+                    div.style.top = positions[i] + 'px';
+                    content.appendChild(div);
+
+                    requestAnimationFrame(() => {
+                        const rect = div.getBoundingClientRect();
+                        heights[i] = rect.height;
+                        updatePostions();
+                    });
+                }
+            };
+
+            //直接调用两次是无效的，因为这时候还在同一帧内， render中的requestAnimationFrame会在这一帧的下一帧被调用，所以heights还是旧的，计算出来的结果是一样的
+            //render();render();
+
+            //初始化
+            render();
+            requestAnimationFrame(() => render());
+            container.addEventListener('scroll', () => {
+                requestAnimationFrame(render);
+            });
+        </script>
+    </body>
+</html>
