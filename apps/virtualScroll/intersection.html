@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <title>虚拟滚动 - 不固定高度</title>
+        <style>
+            #container {
+                height: 400px;
+                overflow-y: auto;
+                border: 1px solid #ccc;
+                position: relative;
+            }
+            .item {
+                margin: 4px;
+                padding: 8px;
+                border: 1px solid #ddd;
+                background: #f9f9f9;
+                box-sizing: border-box;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container">
+            <div id="topSpacer"></div>
+            <div id="list"></div>
+            <div id="bottomSpacer"></div>
+        </div>
+
+        <script>
+            const container = document.getElementById('container');
+            const topSpacer = document.getElementById('topSpacer');
+            const list = document.getElementById('list');
+            const bottomSpacer = document.getElementById('bottomSpacer');
+
+            // 模拟大数据
+            const total = 1000;
+            const data = Array.from(
+                { length: total },
+                (_, i) => `Item ${i + 1}`
+            );
+
+            // 渲染窗口参数
+            const pageSize = 20; // 渲染数量
+            const buffer = 10; // 前后缓冲条数
+            const estimateH = 50; // 未测量时默认高度
+
+            let startIndex = 0;
+            let endIndex = Math.min(startIndex + pageSize, total);
+
+            // 记录每条真实高度
+            const heights = new Map();
+
+            // 保存首尾元素引用
+            let firstElem = null;
+            let lastElem = null;
+
+            // 渲染列表
+            function render() {
+                if (isUpdating) return;
+                isUpdating = true;
+                // 清空 list
+                list.innerHTML = '';
+
+                // 计算前后 spacer 高度
+                let topH = 0;
+                for (let i = 0; i < startIndex; i++) {
+                    topH += heights.get(i) ?? estimateH;
+                }
+                let bottomH = 0;
+                for (let i = endIndex; i < total; i++) {
+                    bottomH += heights.get(i) ?? estimateH;
+                }
+                topSpacer.style.height = topH + 'px';
+                bottomSpacer.style.height = bottomH + 'px';
+
+                // 渲染 slice
+                const slice = data.slice(startIndex, endIndex);
+                slice.forEach((text, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'item';
+                    div.textContent = text + ' —— 随机高度';
+                    div.style.height =
+                        (heights.get(startIndex + idx) ??
+                            Math.floor(Math.random() * 100 + 30)) + 'px'; // 模拟不固定高度
+                    list.appendChild(div);
+
+                    // 测量真实高度
+                    requestAnimationFrame(() => {
+                        if (!heights.get(startIndex + idx)) {
+                            heights.set(
+                                startIndex + idx,
+                                div.getBoundingClientRect().height
+                            );
+                        }
+                    });
+
+                    // 观察首尾
+                    if (idx === 0) firstElem = div;
+                    if (idx === slice.length - 1) lastElem = div;
+                });
+
+                requestAnimationFrame(() => {
+                    container.scrollTop = topH; //不反复触发底部的向下更新逻辑
+                });
+
+                // 注册 observer
+                if (firstElem) observerFirst.observe(firstElem);
+                if (lastElem) observerLast.observe(lastElem);
+                isUpdating = false;
+            }
+
+            // Intersection Observer：顶部元素
+            const observerFirst = new IntersectionObserver(
+                entries => {
+                    entries.forEach(entry => {
+                        // 只有在向上滚动时才触发加载更多
+                        if (
+                            entry.isIntersecting &&
+                            startIndex > 0 &&
+                            scrollDirection === 'up'
+                        ) {
+                            observerFirst.unobserve(entry.target);
+                            firstElem = null;
+
+                            // 清除之前的超时
+                            if (updateTimeout) {
+                                clearTimeout(updateTimeout);
+                            }
+
+                            // 设置防抖延迟
+                            updateTimeout = setTimeout(() => {
+                                // 往前移动 buffer 条
+                                startIndex = Math.max(0, startIndex - buffer);
+                                endIndex = startIndex + pageSize;
+                                console.log(
+                                    '向上滚动 - startIndex:',
+                                    startIndex
+                                );
+                                render();
+                            }, 50); // 50ms防抖延迟
+                        }
+                    });
+                },
+                {
+                    root: container,
+                    threshold: 0.5,
+                }
+            );
+
+            // 防抖控制变量
+            let isUpdating = false;
+            let updateTimeout = null;
+
+            // 滚动方向检测变量
+            let lastScrollTop = 0;
+            let scrollDirection = 'down'; // 'up' 或 'down'
+
+            /**
+             * 监听滚动事件，检测滚动方向
+             */
+            container.addEventListener('scroll', () => {
+                const currentScrollTop = container.scrollTop;
+                scrollDirection =
+                    currentScrollTop > lastScrollTop ? 'down' : 'up';
+                lastScrollTop = currentScrollTop;
+            });
+
+            // Intersection Observer：底部元素
+            const observerLast = new IntersectionObserver(
+                entries => {
+                    entries.forEach(entry => {
+                        // 只有在向下滚动时才触发加载更多
+                        if (
+                            entry.isIntersecting &&
+                            endIndex < total &&
+                            scrollDirection === 'down'
+                        ) {
+                            observerLast.unobserve(entry.target);
+                            lastElem = null;
+                            // 清除之前的超时
+                            if (updateTimeout) {
+                                clearTimeout(updateTimeout);
+                            }
+
+                            // 设置防抖延迟
+                            updateTimeout = setTimeout(() => {
+                                // 往后移动 buffer 条
+                                endIndex = Math.min(total, endIndex + buffer);
+                                startIndex = endIndex - pageSize;
+                                console.log('向下滚动 - endIndex:', endIndex);
+                                render();
+                            }, 50); // 50ms防抖延迟
+                        }
+                    });
+                },
+                {
+                    root: container,
+                    threshold: 0.5,
+                }
+            );
+
+            requestAnimationFrame(render);
+        </script>
+    </body>
+</html>
